@@ -32,17 +32,14 @@ def parse_arg(x, name, param_spec):
     else:
         default_value = param_spec
         param_type = type(default_value)
-    
-    
-    
+
     if x.replace('.', '').isdigit():
         if x.isdigit():
             x = int(x)
         else:
             x = float(x)
-
-    print('def', name, default_value, param_type, x, type(x))
-
+    
+    # if the param type does not match its spec, use the default
     if (param_type == 'id' and not ID_STRING_REGEX.match(x)) or type(x) != param_type:
         x = default_value
                 
