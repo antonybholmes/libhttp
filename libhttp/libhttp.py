@@ -8,7 +8,7 @@ Created on Wed Mar 28 11:04:08 2018
 
 import re
 
-ID_STRING_REGEX = re.compile(r'^[a-zA-Z0-9\-]+$')
+ID_STRING_REGEX = re.compile(r'^[a-zA-Z0-9\-\:\,]+$')
 
 def parse_arg(x, name, param_spec):
     """
