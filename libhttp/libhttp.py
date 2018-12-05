@@ -10,6 +10,81 @@ import re
 
 ID_STRING_REGEX = re.compile(r'^[a-zA-Z0-9\-\:\,]+$')
 
+class Arg(object):
+    def __init__(self, name, default_value=None, arg_type=None, multiple=False):
+        self.__name = name
+        self.__default_value = default_value
+        self.__arg_type = arg_type
+        self.__multiple = multiple
+        
+    @property
+    def name(self):
+        return self.__name
+    
+    @property
+    def default_value(self):
+        return self.__default_value
+    
+    @property
+    def arg_type(self):
+        return self.__arg_type
+    
+    @property
+    def multiple(self):
+        return self.__multiple
+    
+
+class ArgParser(object):
+    def __init__(self):
+        self.__arg_map = {}
+        
+    def add(self, arg, default_value=None, arg_type=None, multiple=False):
+        if isinstance(arg, Arg):
+            self.__arg_map[arg.name] = arg
+        elif isinstance(arg, dict):
+            name = next(iter(arg))
+            self.__arg_map[name] = Arg(arg, default_value=arg[name], multiple=multiple)
+        else:
+            if arg_type is None and default_value is not None:
+                arg_type = type(default_value)
+                
+            self.__arg_map[arg] = Arg(arg, default_value=default_value, arg_type=arg_type, multiple=multiple)
+            
+        return self
+            
+    def parse(self, request):
+        ret = {}
+        
+        for name, arg in self.__arg_map.items():
+            
+            if name in request.GET:
+                values = []
+                
+                for x in request.GET.getlist(name):
+                    if arg.arg_type is int:
+                        x2 = x.replace(',', '')
+                        if x2.isdigit():
+                            values.append(int(x2))
+                    elif arg.arg_type is float:
+                        x2 = x.replace(',', '')
+                        if x2.replace('.', '').isdigit():
+                            values.append(float(x2))
+                    else:
+                        values.append(x)
+                
+                if arg.multiple:
+                    ret[name] = values
+                else:
+                    if len(values) > 0:
+                        ret[name] = values[0]
+            else:
+                if arg.default_value is not None:
+                    ret[name] = arg.default_value
+                    
+        return ret
+        
+    
+
 def parse_arg(x, name, param_spec):
     """
     Parse a string argument and attempt to turn numbers into actual
@@ -86,9 +161,11 @@ def parse_params(request, params, id_map=None):
             # If arg does not exist, supply a default
             
             if isinstance(param_spec, tuple):
-                id_map[name] = [param_spec[0]]
+                if param_spec[0] is not None:
+                    id_map[name] = [param_spec[0]]
             else:
-                id_map[name] = [param_spec]
+                if param_spec is not None:
+                    id_map[name] = [param_spec]
             
             
     return id_map
