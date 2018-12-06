@@ -52,8 +52,9 @@ class ArgParser(object):
             
         return self
             
-    def parse(self, request):
-        ret = {}
+    def parse(self, request, id_map=None):
+        if id_map is None:
+            id_map = {}
         
         for name, arg in self.__arg_map.items():
             
@@ -73,15 +74,15 @@ class ArgParser(object):
                         values.append(x)
                 
                 if arg.multiple:
-                    ret[name] = values
+                    id_map[name] = values
                 else:
                     if len(values) > 0:
-                        ret[name] = values[0]
+                        id_map[name] = values[0]
             else:
                 if arg.default_value is not None:
-                    ret[name] = arg.default_value
+                    id_map[name] = arg.default_value
                     
-        return ret
+        return id_map
         
     
 
